@@ -23,7 +23,9 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-
+import os
+import subprocess
+from libqtile import hook
 from libqtile import bar, layout, widget
 from libqtile.config import Click, Drag, Group, Key, Match, Screen
 from libqtile.lazy import lazy
@@ -31,8 +33,8 @@ from libqtile.utils import guess_terminal
 
 mod = "mod4"
 terminal = guess_terminal()
-#WebBrowser = google-chrome-stable
-#TextEditor = code
+WebBrowser = "google-chrome-stable"
+TextEditor = "code"
 
 
 keys = [
@@ -43,7 +45,7 @@ keys = [
     Key([mod], "l", lazy.layout.right(), desc="Move focus to right"),
     Key([mod], "j", lazy.layout.down(), desc="Move focus down"),
     Key([mod], "k", lazy.layout.up(), desc="Move focus up"),
-    Key([mod], "space", lazy.layout.next(), desc="Move window focus to other window"),
+    #Key([mod], "space", lazy.layout.next(), desc="Move window focus to other window"),
     # Move windows between left/right columns or move up/down in current stack.
     # Moving out of range in Columns layout will create new column.
     Key([mod, "shift"], "h", lazy.layout.shuffle_left(), desc="Move window to the left"),
@@ -71,15 +73,16 @@ keys = [
     ),
     #launch applications 
     Key([mod], "Return", lazy.spawn(terminal), desc="Launch terminal"),
-    Key([mod], "b", lazy.spawn("google-chrome-stable"), desc="Launch chrome"),
+    Key([mod], "b", lazy.spawn(WebBrowser), desc="Launch chrome"),
     Key([mod], "n", lazy.spawn("obsidian"), desc="Launch obsidian"),
-    Key([mod], "v", lazy.spawn("code"), desc="Launch text editor"),
+    Key([mod], "v", lazy.spawn(TextEditor), desc="Launch text editor"),
     # Toggle between different layouts as defined below
     Key([mod], "Tab", lazy.next_layout(), desc="Toggle between layouts"),
     Key([mod, "control"], "c", lazy.window.kill(), desc="Kill focused window"),
     Key([mod, "control"], "r", lazy.reload_config(), desc="Reload the config"),
     Key([mod, "control"], "q", lazy.shutdown(), desc="Shutdown Qtile"),
-    Key([mod], "r", lazy.spawncmd(), desc="Spawn a command using a prompt widget"),
+    Key([mod], "space", lazy.spawn("rofi -show drun"), desc="Spawn a command using a prompt widget"),
+    Key([mod, "control"], "space", lazy.spawn("rofi -show window"))
 ]
 
 groups = [Group(i) for i in "123456789"]
@@ -108,14 +111,23 @@ for i in groups:
         ]
     )
 
+
+# Sets theme for layout
+layout_theme = {"border_width": 3,
+                "margin" : 6,
+                "border_focus": "#3944BC",
+                "border_normal": "#2C3E4C"}
+
+
 layouts = [
-    layout.Columns(border_focus_stack=["#7393B3", "#8f3d3d"], border_width=3),
+    # layout.Columns(**layout_theme),
+    layout.MonadTall(**layout_theme),
     layout.Max(),
     # Try more layouts by unleashing below layouts.
     # layout.Stack(num_stacks=2),
     # layout.Bsp(),
     # layout.Matrix(),
-    # layout.MonadTall(),
+    # layout.MonadTall(**layout_theme),
     # layout.MonadWide(),
     # layout.RatioTile(),
     # layout.Tile(),
@@ -145,11 +157,11 @@ screens = [
                     },
                     name_transform=lambda name: name.upper(),
                 ),
-                widget.TextBox("Press &lt;M-r&gt; to spawn", foreground="#d75f5f"),
                 # NB Systray is incompatible with Wayland, consider using StatusNotifier instead
                 # widget.StatusNotifier(),
                 widget.Systray(),
-                widget.Clock(format="%Y-%m-%d %a %I:%M %p"),
+                widget.Clock(format="%I:%M %p"),
+                widget.Battery(),     
                 widget.QuickExit(),
             ],
             38,
@@ -188,8 +200,13 @@ focus_on_window_activation = "smart"
 reconfigure_screens = True
 
 
+# autostart shell scrips
+@hook.subscribe.startup
 def autostart():
-    lazy.spawn("~/.config/qtile/autostart.sh")
+    subprocess.call("/home/owen/.config/qtile/autostart.sh")
+
+
+
 
 
 # If things like steam games want to auto-minimize themselves when losing
